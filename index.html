@@ -1,0 +1,435 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Song Guesser — O Jogo de Adivinhar Músicas</title>
+    <meta name="description" content="Adivinhe a música pelos primeiros segundos! Inspirado no Heardle com design autêntico do Spotify." />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Outfit:wght@400;600;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/src/style.css" />
+  </head>
+  <body>
+    <div id="app" class="spotify-app">
+      <!-- Navigation Bar -->
+      <header class="app-header">
+        <div class="header-left">
+          <div class="spotify-brand">
+            <svg class="spotify-logo-icon" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M12 2C6.477 2 2 6.477 2 12s4.477 10 10 10 10-4.477 10-10S17.523 2 12 2zm4.586 14.424a.627.627 0 01-.861.208c-2.358-1.441-5.327-1.767-8.824-.969a.625.625 0 11-.278-1.22c3.826-.874 7.108-.506 9.755 1.12.302.185.394.577.208.861zm1.226-2.729a.784.784 0 01-1.08.258c-2.7-1.66-6.816-2.14-10.01-1.171a.785.785 0 11-.453-1.503c3.655-1.107 8.197-.577 11.285 1.334a.784.784 0 01.258 1.082zm.106-2.837c-3.238-1.922-8.583-2.1-11.677-1.16a.942.942 0 01-.548-1.802c3.555-1.08 9.452-.871 13.167 1.335a.942.942 0 01-.942 1.627z"/>
+            </svg>
+            <div class="brand-text">
+              <span class="brand-title">Song Guesser</span>
+              <span class="brand-tag">ALESSIO EDITION</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="header-right">
+          <!-- Volume control -->
+          <div class="volume-container">
+            <button id="muteBtn" class="icon-btn" title="Mudo / Volume" aria-label="Controle de volume">
+              <svg id="volumeIcon" viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
+                <path d="M11 5L6 9H2v6h4l5 4V5zm3.5 7c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/>
+              </svg>
+            </button>
+            <input type="range" id="volumeSlider" min="0" max="1" step="0.05" value="0.8" class="spotify-slider" title="Volume">
+          </div>
+
+          <!-- History button -->
+          <button id="historyBtn" class="pill-action-btn" title="Histórico de Músicas" aria-label="Histórico">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="10"/>
+              <polyline points="12 6 12 12 16 14"/>
+            </svg>
+            <span class="btn-text">Histórico</span>
+          </button>
+
+          <!-- Stats button -->
+          <button id="statsBtn" class="pill-action-btn" title="Estatísticas" aria-label="Estatísticas">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M18 20V10M12 20V4M6 20v-6"/>
+            </svg>
+            <span class="btn-text">Stats</span>
+          </button>
+
+          <!-- How to play button -->
+          <button id="helpBtn" class="icon-btn" title="Como Jogar" aria-label="Como jogar">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="10"/>
+              <path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3"/>
+              <line x1="12" y1="17" x2="12.01" y2="17"/>
+            </svg>
+          </button>
+        </div>
+      </header>
+
+      <!-- Dedicated Genre / Category Selector (Always Visible on Mobile & Desktop) -->
+      <nav class="genres-bar-wrapper" id="genresBarWrapper" aria-label="Gêneros e Categorias">
+        <div class="category-pills" id="categoryPills">
+          <!-- Rendered dynamically -->
+        </div>
+      </nav>
+
+      <!-- Main Game Canvas -->
+      <main class="game-container">
+        <!-- Playlist Banner & Round Info -->
+        <section class="game-banner">
+          <div class="banner-badge">
+            <span class="badge-dot"></span>
+            <span id="currentCategoryTitle">Top Hits Globais</span>
+          </div>
+          <div class="round-counter">
+            <span id="roundCounterText">Música 1 de 10</span>
+            <button id="btnSkipSong" class="text-link-btn" title="Ir para outra música sem penalidade">Trocar música ↷</button>
+          </div>
+        </section>
+
+        <!-- Center Mystery Audio Hero Card -->
+        <section class="player-card">
+          <div class="vinyl-display">
+            <!-- Vinyl Disc with groove rings -->
+            <div class="vinyl-disc" id="vinylDisc">
+              <div class="vinyl-ring ring-1"></div>
+              <div class="vinyl-ring ring-2"></div>
+              <div class="vinyl-center">
+                <div class="center-art" id="mysteryCover">
+                  <span class="mystery-symbol">?</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Dynamic Equalizer Animation -->
+            <div class="equalizer" id="equalizer">
+              <span class="eq-bar"></span>
+              <span class="eq-bar"></span>
+              <span class="eq-bar"></span>
+              <span class="eq-bar"></span>
+              <span class="eq-bar"></span>
+              <span class="eq-bar"></span>
+              <span class="eq-bar"></span>
+              <span class="eq-bar"></span>
+            </div>
+          </div>
+
+          <!-- Snippet duration status -->
+          <div class="snippet-badge-wrap">
+            <span class="snippet-badge" id="snippetStatusBadge">
+              🎧 Trecho atual: <strong>1 segundo</strong>
+            </span>
+            <span class="replay-hint">Pressione <strong>Espaço</strong> para ouvir ou repita quantas vezes quiser!</span>
+          </div>
+
+          <!-- Segmented Timeline Bar -->
+          <div class="timeline-wrapper">
+            <div class="timeline-time-info">
+              <span id="currentTimeDisplay">0.0s</span>
+              <span id="maxTimeDisplay">1.0s (de 30s)</span>
+            </div>
+            
+            <div class="timeline-segments" id="timelineSegments">
+              <!-- Rendered via JS: 1s, 3s, 5s, 10s, 16s, 30s -->
+            </div>
+          </div>
+
+          <!-- Playback Controls -->
+          <div class="playback-controls">
+            <!-- Replay snippet button -->
+            <button id="btnReplay" class="control-btn secondary-btn" title="Repetir trecho atual do início">
+              <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
+                <path d="M12 5V1L7 6l5 5V7c3.31 0 6 2.69 6 6s-2.69 6-6 6-6-2.69-6-6H4c0 4.42 3.58 8 8 8s8-3.58 8-8-3.58-8-8-8z"/>
+              </svg>
+              <span>Repetir <span id="replaySecondsLabel">1s</span></span>
+            </button>
+
+            <!-- Main Play / Pause Button -->
+            <button id="btnMainPlay" class="play-btn-circle" title="Tocar / Pausar trecho" aria-label="Tocar trecho">
+              <svg id="playIcon" class="play-icon" viewBox="0 0 24 24" width="28" height="28" fill="currentColor">
+                <polygon points="5 3 19 12 5 21 5 3"/>
+              </svg>
+              <svg id="pauseIcon" class="pause-icon hidden" viewBox="0 0 24 24" width="28" height="28" fill="currentColor">
+                <rect x="6" y="4" width="4" height="16"/>
+                <rect x="14" y="4" width="4" height="16"/>
+              </svg>
+            </button>
+
+            <!-- Skip / Give up step to reveal more audio -->
+            <button id="btnSkipStep" class="control-btn secondary-btn skip-btn" title="Pular tentativa para desbloquear mais segundos">
+              <span>Pular (+ <span id="nextSecondsLabel">2s</span>)</span>
+              <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
+                <polygon points="5 4 15 12 5 20 5 4"/>
+                <line x1="19" y1="5" x2="19" y2="19" stroke="currentColor" stroke-width="2"/>
+              </svg>
+            </button>
+          </div>
+
+          <!-- Reveal / Surrender Action -->
+          <div class="reveal-action-wrapper">
+            <button id="btnRevealSong" class="control-btn reveal-song-btn" title="Desistir da rodada e revelar a resposta">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                <circle cx="12" cy="12" r="3"/>
+              </svg>
+              <span>Revelar Resposta (Desistir)</span>
+            </button>
+          </div>
+        </section>
+
+        <!-- Guessing Section: Search Autocomplete & Submit -->
+        <section class="guess-section">
+          <div class="search-box-wrapper">
+            <div class="search-input-container">
+              <svg class="search-icon" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="11" cy="11" r="8"/>
+                <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+              </svg>
+              <input 
+                type="text" 
+                id="songSearchInput" 
+                class="spotify-search-input" 
+                placeholder="Qual é a música ou o artista?" 
+                autocomplete="off"
+                spellcheck="false"
+              />
+              <button id="btnClearSearch" class="btn-clear hidden" title="Limpar busca">✕</button>
+            </div>
+
+            <!-- Autocomplete suggestions dropdown -->
+            <div id="autocompleteDropdown" class="autocomplete-dropdown hidden">
+              <!-- Rendered dynamically -->
+            </div>
+          </div>
+
+          <button id="btnSubmitGuess" class="submit-guess-btn">
+            Adivinhar
+          </button>
+        </section>
+
+        <!-- Attempts Slots List (Spotify Tracklist Style) -->
+        <section class="attempts-card">
+          <div class="attempts-header">
+            <span>Tentativas Restantes (<span id="attemptsRemainingCount">6</span>)</span>
+            <span class="attempts-hint">Pule ou chute errado para ganhar mais segundos</span>
+          </div>
+
+          <div class="attempts-list" id="attemptsList">
+            <!-- 6 slots rendered here -->
+          </div>
+        </section>
+      </main>
+
+      <!-- Bottom Floating Player (Spotify Style) -->
+      <footer class="bottom-player-bar">
+        <div class="player-left">
+          <div class="mini-album-art" id="miniAlbumArt">
+            <span>🎵</span>
+          </div>
+          <div class="mini-song-details">
+            <span class="mini-title" id="miniSongTitle">Música Misteriosa</span>
+            <span class="mini-artist" id="miniArtist">Song Guesser</span>
+          </div>
+        </div>
+
+        <div class="player-center">
+          <div class="mini-controls">
+            <button id="footerPlayBtn" class="mini-play-btn" title="Tocar trecho">
+              <svg id="footerPlayIcon" viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
+                <polygon points="5 3 19 12 5 21 5 3"/>
+              </svg>
+            </button>
+            <div class="mini-progress-track">
+              <div class="mini-progress-fill" id="miniProgressFill"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="player-right">
+          <span class="footer-spotify-credit">Criado por Guilherme Alessio</span>
+        </div>
+      </footer>
+
+      <!-- Victory / Result Modal -->
+      <div id="resultModal" class="modal-backdrop hidden">
+        <div class="modal-card result-modal-card">
+          <div class="modal-glow" id="resultModalGlow"></div>
+          
+          <div class="result-header">
+            <div class="result-badge" id="resultBadge">🎉 Mandou Bem!</div>
+            <h2 id="resultTitle" class="result-main-title">Você acertou!</h2>
+            <p id="resultSubtitle" class="result-subtitle">Acertou em apenas 1 segundo!</p>
+          </div>
+
+          <div class="result-song-showcase">
+            <img id="revealAlbumCover" src="" alt="Capa do Álbum" class="reveal-cover" />
+            <div class="reveal-info">
+              <h3 id="revealSongTitle" class="reveal-title">Nome da Música</h3>
+              <p id="revealArtist" class="reveal-artist">Artista</p>
+              <p id="revealAlbum" class="reveal-album">Álbum</p>
+            </div>
+          </div>
+
+          <!-- Snippet full preview player -->
+          <div class="result-actions">
+            <button id="btnPlayFullReveal" class="spotify-pill-btn secondary">
+              <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor">
+                <polygon points="5 3 19 12 5 21 5 3"/>
+              </svg>
+              <span>Ouvir Prévia Completa (30s)</span>
+            </button>
+
+            <a id="btnOpenSpotify" href="#" target="_blank" rel="noopener noreferrer" class="spotify-pill-btn brand">
+              <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor">
+                <path d="M12 2C6.477 2 2 6.477 2 12s4.477 10 10 10 10-4.477 10-10S17.523 2 12 2zm4.586 14.424a.627.627 0 01-.861.208c-2.358-1.441-5.327-1.767-8.824-.969a.625.625 0 11-.278-1.22c3.826-.874 7.108-.506 9.755 1.12.302.185.394.577.208.861zm1.226-2.729a.784.784 0 01-1.08.258c-2.7-1.66-6.816-2.14-10.01-1.171a.785.785 0 11-.453-1.503c3.655-1.107 8.197-.577 11.285 1.334a.784.784 0 01.258 1.082zm.106-2.837c-3.238-1.922-8.583-2.1-11.677-1.16a.942.942 0 01-.548-1.802c3.555-1.08 9.452-.871 13.167 1.335a.942.942 0 01-.942 1.627z"/>
+              </svg>
+              <span>Abrir no Spotify</span>
+            </a>
+          </div>
+
+          <div class="result-footer">
+            <button id="btnNextSong" class="spotify-pill-btn primary btn-large">
+              Próxima Música ➔
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Stats Modal -->
+      <div id="statsModal" class="modal-backdrop hidden">
+        <div class="modal-card">
+          <div class="modal-close-bar">
+            <h3 class="modal-title">Estatísticas</h3>
+            <button id="btnCloseStats" class="icon-btn close-modal-btn">✕</button>
+          </div>
+
+          <div class="stats-grid">
+            <div class="stat-box">
+              <span class="stat-number" id="statPlayed">0</span>
+              <span class="stat-label">Jogadas</span>
+            </div>
+            <div class="stat-box">
+              <span class="stat-number" id="statWinRate">0%</span>
+              <span class="stat-label">Vitórias</span>
+            </div>
+            <div class="stat-box">
+              <span class="stat-number" id="statCurrentStreak">0</span>
+              <span class="stat-label">Sequência Atual</span>
+            </div>
+            <div class="stat-box">
+              <span class="stat-number" id="statMaxStreak">0</span>
+              <span class="stat-label">Melhor Sequência</span>
+            </div>
+          </div>
+
+          <div class="distribution-section">
+            <h4 class="distrib-title">Distribuição de Acertos por Trecho</h4>
+            <div class="distrib-bars" id="distribBars">
+              <!-- Rendered via JS -->
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- How to Play Modal -->
+      <div id="helpModal" class="modal-backdrop hidden">
+        <div class="modal-card">
+          <div class="modal-close-bar">
+            <h3 class="modal-title">Como Jogar</h3>
+            <button id="btnCloseHelp" class="icon-btn close-modal-btn">✕</button>
+          </div>
+
+          <div class="help-steps">
+            <div class="help-step">
+              <div class="step-num">1</div>
+              <div class="step-content">
+                <strong>Ouça o primeiro trecho</strong>
+                <p>Comece escutando apenas <strong>1 segundo</strong> da introdução da música. Você pode repetir quantas vezes quiser!</p>
+              </div>
+            </div>
+
+            <div class="help-step">
+              <div class="step-num">2</div>
+              <div class="step-content">
+                <strong>Chute ou desbloqueie mais tempo</strong>
+                <p>Erros ou pulos desbloqueiam trechos maiores: <strong>3s, 5s, 10s, 16s e 30s</strong>.</p>
+              </div>
+            </div>
+
+            <div class="help-step">
+              <div class="step-num">3</div>
+              <div class="step-content">
+                <strong>Acerte com o menor tempo possível</strong>
+                <p>Use a barra de busca para pesquisar o nome ou artista da música. Acerte nos primeiros segundos para manter sua sequência!</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="help-footer">
+            <button id="btnGotItHelp" class="spotify-pill-btn primary">Bora Jogar!</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Custom Artist Modal -->
+      <div id="customArtistModal" class="modal-backdrop hidden">
+        <div class="modal-card">
+          <div class="modal-close-bar">
+            <h3 class="modal-title">Modo Artista Específico</h3>
+            <button id="btnCloseCustomArtist" class="icon-btn close-modal-btn">✕</button>
+          </div>
+
+          <p class="custom-modal-desc">Digite o nome de qualquer cantor ou banda para gerar um jogo personalizado com as músicas dele:</p>
+          
+          <div class="custom-artist-input-wrap">
+            <input 
+              type="text" 
+              id="customArtistInput" 
+              class="spotify-search-input" 
+              placeholder="Ex: Legião Urbana, Taylor Swift, Coldplay, Alok..." 
+            />
+          </div>
+
+          <div class="popular-artists-tags">
+            <span class="tag-title">Sugestões rápidas:</span>
+            <div class="tags-row">
+              <button class="artist-tag-btn" data-artist="Coldplay">Coldplay</button>
+              <button class="artist-tag-btn" data-artist="Queen">Queen</button>
+              <button class="artist-tag-btn" data-artist="Taylor Swift">Taylor Swift</button>
+              <button class="artist-tag-btn" data-artist="Billie Eilish">Billie Eilish</button>
+              <button class="artist-tag-btn" data-artist="Legião Urbana">Legião Urbana</button>
+              <button class="artist-tag-btn" data-artist="The Weeknd">The Weeknd</button>
+            </div>
+          </div>
+
+          <div class="modal-action-row">
+            <button id="btnStartCustomGame" class="spotify-pill-btn primary btn-large">
+              Iniciar Jogo com Este Artista
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- History Modal -->
+      <div id="historyModal" class="modal-backdrop hidden">
+        <div class="modal-card history-modal-card">
+          <div class="modal-close-bar">
+            <div>
+              <h3 class="modal-title">Histórico de Músicas</h3>
+              <p class="history-modal-sub" id="historyCountSub">Suas últimas músicas jogadas</p>
+            </div>
+            <div class="history-actions-wrap">
+              <button id="btnClearHistory" class="text-link-btn" title="Limpar histórico de partidas">Limpar</button>
+              <button id="btnCloseHistory" class="icon-btn close-modal-btn">✕</button>
+            </div>
+          </div>
+
+          <div class="history-list" id="historyList">
+            <!-- Rendered dynamically -->
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>
