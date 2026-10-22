@@ -123,7 +123,8 @@ function renderCategoryPills() {
     const pill = document.createElement('button');
     pill.className = `cat-pill ${cat.id === game.category ? 'active' : ''}`;
     pill.dataset.catId = cat.id;
-    pill.innerHTML = `<span>${cat.icon}</span> <span>${cat.name}</span>`;
+    pill.style.setProperty('--pill-gradient', cat.gradient);
+    pill.innerHTML = `<span class="pill-icon">${cat.icon}</span> <span class="pill-label">${cat.name}</span>`;
     pill.addEventListener('click', () => {
       document.querySelectorAll('.cat-pill').forEach(p => p.classList.remove('active'));
       pill.classList.add('active');
@@ -137,7 +138,7 @@ function renderCategoryPills() {
   const customPill = document.createElement('button');
   customPill.className = 'cat-pill custom-btn';
   customPill.dataset.catId = 'custom';
-  customPill.innerHTML = `<span>🔍</span> <span>Outro Artista</span>`;
+  customPill.innerHTML = `<span class="pill-icon">🔍</span> <span class="pill-label">Outro Artista</span>`;
   customPill.addEventListener('click', () => {
     customPill.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
     openModal(customArtistModal);

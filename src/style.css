@@ -157,15 +157,40 @@ body::before {
   position: sticky;
   top: 68px;
   z-index: 45;
-  background-color: rgba(18, 18, 18, 0.92);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border-bottom: 1px solid var(--border-subtle);
+  background: linear-gradient(180deg, rgba(18, 18, 18, 0.97) 0%, rgba(18, 18, 18, 0.85) 100%);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
   width: 100%;
-  padding: 10px 20px;
+  padding: 14px 20px 16px;
   display: flex;
-  justify-content: center;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
   transition: all var(--transition-fast);
+}
+
+.genres-bar-title {
+  font-family: var(--font-display);
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1.8px;
+  color: var(--text-muted);
+  text-align: center;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.genres-bar-title::before,
+.genres-bar-title::after {
+  content: '';
+  display: block;
+  width: 28px;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--text-muted), transparent);
+  opacity: 0.4;
 }
 
 .category-pills {
@@ -175,10 +200,12 @@ body::before {
   overflow-x: auto;
   scrollbar-width: none;
   -webkit-overflow-scrolling: touch;
-  max-width: 900px;
+  max-width: 960px;
   width: 100%;
-  padding: 2px 4px;
+  padding: 4px 8px;
   scroll-behavior: smooth;
+  mask-image: linear-gradient(to right, transparent 0, black 8px, black calc(100% - 8px), transparent 100%);
+  -webkit-mask-image: linear-gradient(to right, transparent 0, black 8px, black calc(100% - 8px), transparent 100%);
 }
 
 .category-pills::-webkit-scrollbar {
@@ -186,48 +213,118 @@ body::before {
 }
 
 .cat-pill {
-  background: var(--bg-surface);
-  border: 1px solid var(--border-subtle);
+  --pill-gradient: linear-gradient(135deg, #333, #555);
+  position: relative;
+  background: linear-gradient(135deg, rgba(255,255,255,0.06) 0%, rgba(255,255,255,0.02) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.1);
   color: var(--text-secondary);
   font-family: var(--font-main);
-  font-size: 0.84rem;
+  font-size: 0.88rem;
   font-weight: 600;
-  padding: 7px 16px;
-  border-radius: var(--radius-full);
+  padding: 10px 20px;
+  border-radius: 14px;
   cursor: pointer;
   white-space: nowrap;
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
   flex-shrink: 0;
-  transition: all var(--transition-fast);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   user-select: none;
+  overflow: hidden;
+}
+
+.cat-pill .pill-icon {
+  font-size: 1.15rem;
+  line-height: 1;
+  filter: grayscale(0.3);
+  transition: filter 0.3s ease, transform 0.3s ease;
+}
+
+.cat-pill::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: var(--pill-gradient);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  border-radius: inherit;
+  z-index: 0;
+}
+
+.cat-pill > * {
+  position: relative;
+  z-index: 1;
 }
 
 .cat-pill:hover {
-  background: var(--bg-hover);
+  border-color: rgba(255, 255, 255, 0.2);
+  transform: translateY(-2px) scale(1.03);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
   color: var(--text-primary);
-  border-color: rgba(255, 255, 255, 0.25);
-  transform: translateY(-1px);
+}
+
+.cat-pill:hover::before {
+  opacity: 0.25;
+}
+
+.cat-pill:hover .pill-icon {
+  filter: grayscale(0);
+  transform: scale(1.15);
+}
+
+.cat-pill:active {
+  transform: translateY(0) scale(0.98);
 }
 
 .cat-pill.active {
-  background: var(--text-primary);
-  color: var(--text-dark);
+  background: transparent;
+  border-color: rgba(255, 255, 255, 0.3);
+  color: #fff;
   font-weight: 700;
-  border-color: var(--text-primary);
-  box-shadow: 0 2px 12px rgba(255, 255, 255, 0.25);
+  box-shadow:
+    0 4px 20px rgba(0, 0, 0, 0.5),
+    0 0 30px rgba(255, 255, 255, 0.07);
+}
+
+.cat-pill.active::before {
+  opacity: 0.65;
+}
+
+.cat-pill.active .pill-icon {
+  filter: grayscale(0) brightness(1.2);
+  transform: scale(1.1);
+}
+
+.cat-pill.active::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 60%;
+  height: 2px;
+  background: #fff;
+  border-radius: 1px;
+  opacity: 0.8;
+  z-index: 1;
 }
 
 .cat-pill.custom-btn {
-  background: rgba(30, 215, 96, 0.15);
-  border-color: rgba(30, 215, 96, 0.4);
+  background: linear-gradient(135deg, rgba(30, 215, 96, 0.08) 0%, rgba(30, 215, 96, 0.03) 100%);
+  border: 1px dashed rgba(30, 215, 96, 0.35);
   color: var(--spotify-green);
 }
 
 .cat-pill.custom-btn:hover {
-  background: rgba(30, 215, 96, 0.25);
+  background: linear-gradient(135deg, rgba(30, 215, 96, 0.15) 0%, rgba(30, 215, 96, 0.06) 100%);
   border-color: var(--spotify-green);
+  border-style: solid;
+  box-shadow: 0 4px 20px rgba(30, 215, 96, 0.2);
+}
+
+.cat-pill.custom-btn .pill-icon {
+  filter: none;
 }
 
 /* Header Right Actions */
@@ -1573,9 +1670,15 @@ body::before {
   /* Genres Navigation Bar (Fully Visible & Swipeable on Mobile) */
   .genres-bar-wrapper {
     top: 56px;
-    padding: 8px 10px;
+    padding: 10px 10px 12px;
+    gap: 6px;
     mask-image: linear-gradient(to right, transparent 0, black 12px, black calc(100% - 12px), transparent 100%);
     -webkit-mask-image: linear-gradient(to right, transparent 0, black 12px, black calc(100% - 12px), transparent 100%);
+  }
+
+  .genres-bar-title {
+    font-size: 0.65rem;
+    letter-spacing: 1.4px;
   }
 
   .category-pills {
@@ -1584,9 +1687,10 @@ body::before {
   }
 
   .cat-pill {
-    font-size: 0.78rem;
-    padding: 6px 13px;
-    gap: 5px;
+    font-size: 0.82rem;
+    padding: 8px 16px;
+    gap: 6px;
+    border-radius: 12px;
   }
 
   /* Game Canvas */
@@ -1956,8 +2060,9 @@ body::before {
 
 @media (max-width: 375px) {
   .cat-pill {
-    font-size: 0.74rem;
-    padding: 5px 11px;
+    font-size: 0.76rem;
+    padding: 7px 13px;
+    border-radius: 10px;
   }
 
   .control-btn {
