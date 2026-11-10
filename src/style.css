@@ -204,12 +204,129 @@ body::before {
   width: 100%;
   padding: 4px 8px;
   scroll-behavior: smooth;
+  cursor: grab;
   mask-image: linear-gradient(to right, transparent 0, black 8px, black calc(100% - 8px), transparent 100%);
   -webkit-mask-image: linear-gradient(to right, transparent 0, black 8px, black calc(100% - 8px), transparent 100%);
 }
 
+.category-pills.is-dragging {
+  cursor: grabbing;
+  user-select: none;
+}
+
+.category-pills.is-dragging .cat-pill {
+  pointer-events: none;
+}
+
 .category-pills::-webkit-scrollbar {
   display: none;
+}
+
+/* ==========================================================================
+   Interactive Genre Navigation Slider Bar (Drag & Click Navigation)
+   ========================================================================== */
+
+.genres-slider-bar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  width: 100%;
+  max-width: 340px;
+  margin-top: 4px;
+  user-select: none;
+  touch-action: pan-y;
+  transition: opacity 0.3s ease;
+}
+
+.genres-slider-arrow {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: var(--text-secondary);
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  flex-shrink: 0;
+  padding: 0;
+}
+
+.genres-slider-arrow:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.18);
+  border-color: rgba(255, 255, 255, 0.25);
+  color: #fff;
+  transform: scale(1.1);
+}
+
+.genres-slider-arrow:active:not(:disabled) {
+  transform: scale(0.95);
+}
+
+.genres-slider-arrow:disabled {
+  opacity: 0.2;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+.genres-slider-track {
+  position: relative;
+  flex: 1;
+  max-width: 200px;
+  height: 6px;
+  background: rgba(255, 255, 255, 0.12);
+  border-radius: 999px;
+  cursor: pointer;
+  transition: background 0.2s ease, height 0.2s ease;
+  touch-action: none;
+}
+
+.genres-slider-track:hover {
+  background: rgba(255, 255, 255, 0.2);
+  height: 8px;
+}
+
+.genres-slider-thumb {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  min-width: 40px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #6366f1, #a855f7);
+  box-shadow: 0 0 10px rgba(168, 85, 247, 0.5), inset 0 1px 1px rgba(255, 255, 255, 0.4);
+  cursor: grab;
+  touch-action: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s ease, box-shadow 0.2s ease;
+  will-change: left, width;
+}
+
+.genres-slider-track:hover .genres-slider-thumb {
+  box-shadow: 0 0 14px rgba(168, 85, 247, 0.7), inset 0 1px 1px rgba(255, 255, 255, 0.6);
+}
+
+.genres-slider-thumb:hover,
+.genres-slider-thumb.dragging {
+  background: linear-gradient(90deg, #818cf8, #c084fc);
+  box-shadow: 0 0 16px rgba(192, 132, 252, 0.8), inset 0 1px 1px rgba(255, 255, 255, 0.8);
+}
+
+.genres-slider-thumb.dragging {
+  cursor: grabbing;
+}
+
+.thumb-grip-line {
+  width: 12px;
+  height: 2px;
+  background: rgba(255, 255, 255, 0.85);
+  border-radius: 2px;
+  pointer-events: none;
 }
 
 .cat-pill {
@@ -1691,6 +1808,22 @@ body::before {
     padding: 8px 16px;
     gap: 6px;
     border-radius: 12px;
+  }
+
+  .genres-slider-bar {
+    gap: 8px;
+    max-width: 250px;
+    margin-top: 2px;
+  }
+
+  .genres-slider-track {
+    max-width: 150px;
+    height: 5px;
+  }
+
+  .genres-slider-arrow {
+    width: 22px;
+    height: 22px;
   }
 
   /* Game Canvas */

@@ -125,6 +125,7 @@ let activePlaylistTab = 'link';
 
 async function initApp() {
   renderCategoryPills();
+  setupGenresSlider();
   renderTimelineSegments();
   renderAttempts();
   setupAudioCallbacks();
@@ -178,6 +179,204 @@ function renderCategoryPills() {
     openCustomPlaylistModal();
   });
   categoryPillsContainer.appendChild(playlistPill);
+}
+
+/**
+ * Setup interactive slider bar and drag-to-scroll for category navigation
+ */
+function setupGenresSlider() {
+  const container = document.getElementById('categoryPills');
+  const sliderBar = document.getElementById('genresSliderBar');
+  const track = document.getElementById('genresSliderTrack');
+  const thumb = document.getElementById('genresSliderThumb');
+  const btnPrev = document.getElementById('genresScrollPrev');
+  const btnNext = document.getElementById('genresScrollNext');
+
+  if (!container || !track || !thumb) return;
+
+  let isDraggingThumb = false;
+  let thumbDragStartX = 0;
+  let scrollStartLeft = 0;
+
+  // Calculate and sync thumb width and position
+  function updateSlider() {
+    const scrollWidth = container.scrollWidth;
+    const clientWidth = container.clientWidth;
+    const maxScroll = scrollWidth - clientWidth;
+
+    if (maxScroll <= 4) {
+      if (sliderBar) sliderBar.style.display = 'none';
+      return;
+    }
+    if (sliderBar) sliderBar.style.display = 'flex';
+
+    const trackWidth = track.clientWidth;
+    const thumbWidth = Math.max(38, Math.min(trackWidth * 0.7, (clientWidth / scrollWidth) * trackWidth));
+    thumb.style.width = `${thumbWidth}px`;
+
+    const maxThumbLeft = trackWidth - thumbWidth;
+    const currentScroll = Math.max(0, Math.min(maxScroll, container.scrollLeft));
+    const scrollRatio = maxScroll > 0 ? (currentScroll / maxScroll) : 0;
+    const thumbLeft = scrollRatio * maxThumbLeft;
+
+    thumb.style.left = `${thumbLeft}px`;
+
+    if (btnPrev) btnPrev.disabled = container.scrollLeft <= 5;
+    if (btnNext) btnNext.disabled = container.scrollLeft >= maxScroll - 5;
+  }
+
+  // Update on scroll
+  container.addEventListener('scroll', () => {
+    if (!isDraggingThumb) {
+      requestAnimationFrame(updateSlider);
+    }
+  }, { passive: true });
+
+  // Update on window resize
+  window.addEventListener('resize', () => {
+    requestAnimationFrame(updateSlider);
+  });
+
+  // Arrows click (prev / next)
+  if (btnPrev) {
+    btnPrev.addEventListener('click', () => {
+      container.scrollBy({ left: -220, behavior: 'smooth' });
+    });
+  }
+  if (btnNext) {
+    btnNext.addEventListener('click', () => {
+      container.scrollBy({ left: 220, behavior: 'smooth' });
+    });
+  }
+
+  // Mouse wheel horizontal scrolling over container or slider bar
+  const handleWheel = (e) => {
+    if (Math.abs(e.deltaY) > Math.abs(e.deltaX)) {
+      e.preventDefault();
+      container.scrollLeft += e.deltaY;
+    }
+  };
+  container.addEventListener('wheel', handleWheel, { passive: false });
+  if (sliderBar) sliderBar.addEventListener('wheel', handleWheel, { passive: false });
+
+  // Clicking on track jumps/scrolls directly to clicked location
+  track.addEventListener('click', (e) => {
+    if (e.target === thumb || thumb.contains(e.target)) return;
+    const rect = track.getBoundingClientRect();
+    const clickX = e.clientX - rect.left;
+    const trackWidth = rect.width;
+    const thumbWidth = thumb.offsetWidth;
+    const maxThumbLeft = trackWidth - thumbWidth;
+    if (maxThumbLeft <= 0) return;
+
+    const targetThumbLeft = Math.max(0, Math.min(maxThumbLeft, clickX - thumbWidth / 2));
+    const maxScroll = container.scrollWidth - container.clientWidth;
+    const targetScrollLeft = (targetThumbLeft / maxThumbLeft) * maxScroll;
+    container.scrollTo({ left: targetScrollLeft, behavior: 'smooth' });
+  });
+
+  // Thumb dragging (Mouse & Touch)
+  const onThumbPointerDown = (clientX) => {
+    isDraggingThumb = true;
+    thumbDragStartX = clientX;
+    scrollStartLeft = container.scrollLeft;
+    thumb.classList.add('dragging');
+    document.body.style.userSelect = 'none';
+  };
+
+  const onThumbPointerMove = (clientX) => {
+    if (!isDraggingThumb) return;
+    const maxScroll = container.scrollWidth - container.clientWidth;
+    const trackWidth = track.clientWidth;
+    const thumbWidth = thumb.offsetWidth;
+    const maxThumbLeft = trackWidth - thumbWidth;
+    if (maxThumbLeft <= 0) return;
+
+    const deltaX = clientX - thumbDragStartX;
+    const scrollDelta = (deltaX / maxThumbLeft) * maxScroll;
+    container.scrollLeft = scrollStartLeft + scrollDelta;
+    updateSlider();
+  };
+
+  const onThumbPointerUp = () => {
+    if (!isDraggingThumb) return;
+    isDraggingThumb = false;
+    thumb.classList.remove('dragging');
+    document.body.style.userSelect = '';
+    updateSlider();
+  };
+
+  thumb.addEventListener('mousedown', (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    onThumbPointerDown(e.clientX);
+
+    const onMouseMove = (ev) => onThumbPointerMove(ev.clientX);
+    const onMouseUp = () => {
+      onThumbPointerUp();
+      document.removeEventListener('mousemove', onMouseMove);
+      document.removeEventListener('mouseup', onMouseUp);
+    };
+    document.addEventListener('mousemove', onMouseMove);
+    document.addEventListener('mouseup', onMouseUp);
+  });
+
+  thumb.addEventListener('touchstart', (e) => {
+    if (e.touches.length !== 1) return;
+    onThumbPointerDown(e.touches[0].clientX);
+  }, { passive: true });
+
+  window.addEventListener('touchmove', (e) => {
+    if (!isDraggingThumb || e.touches.length !== 1) return;
+    onThumbPointerMove(e.touches[0].clientX);
+  }, { passive: true });
+
+  window.addEventListener('touchend', onThumbPointerUp, { passive: true });
+  window.addEventListener('touchcancel', onThumbPointerUp, { passive: true });
+
+  // Direct grab-and-drag for category pills (Desktop mouse swipe)
+  let isContainerPointerDown = false;
+  let containerStartX = 0;
+  let containerScrollStartX = 0;
+  let hasDraggedContainer = false;
+
+  container.addEventListener('mousedown', (e) => {
+    if (e.button !== 0) return;
+    isContainerPointerDown = true;
+    hasDraggedContainer = false;
+    containerStartX = e.pageX;
+    containerScrollStartX = container.scrollLeft;
+  });
+
+  window.addEventListener('mousemove', (e) => {
+    if (!isContainerPointerDown) return;
+    const deltaX = e.pageX - containerStartX;
+    if (Math.abs(deltaX) > 4) {
+      hasDraggedContainer = true;
+      container.classList.add('is-dragging');
+      container.scrollLeft = containerScrollStartX - deltaX;
+    }
+  });
+
+  window.addEventListener('mouseup', () => {
+    if (!isContainerPointerDown) return;
+    isContainerPointerDown = false;
+    setTimeout(() => {
+      hasDraggedContainer = false;
+      container.classList.remove('is-dragging');
+    }, 50);
+  });
+
+  // Prevent click on pill if user was dragging
+  container.addEventListener('click', (e) => {
+    if (hasDraggedContainer) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+  }, true);
+
+  // Initial update after DOM layout
+  setTimeout(updateSlider, 50);
 }
 
 /**

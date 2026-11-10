@@ -71,6 +71,27 @@
         <div class="category-pills" id="categoryPills">
           <!-- Rendered dynamically -->
         </div>
+
+        <!-- Interactive Horizontal Slider Bar to Drag / Scroll Categories -->
+        <div class="genres-slider-bar" id="genresSliderBar" aria-label="Navegar pelos gêneros">
+          <button type="button" class="genres-slider-arrow" id="genresScrollPrev" aria-label="Gêneros anteriores" title="Gêneros anteriores">
+            <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="15 18 9 12 15 6"></polyline>
+            </svg>
+          </button>
+          
+          <div class="genres-slider-track" id="genresSliderTrack" role="scrollbar" aria-controls="categoryPills" aria-label="Barra de rolagem de gêneros" title="Arraste para o lado para ver mais gêneros">
+            <div class="genres-slider-thumb" id="genresSliderThumb" tabindex="0" role="slider" aria-label="Controle de posição dos gêneros" aria-valuemin="0" aria-valuemax="100">
+              <span class="thumb-grip-line"></span>
+            </div>
+          </div>
+
+          <button type="button" class="genres-slider-arrow" id="genresScrollNext" aria-label="Próximos gêneros" title="Próximos gêneros">
+            <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="9 18 15 12 9 6"></polyline>
+            </svg>
+          </button>
+        </div>
       </nav>
 
       <!-- Main Game Canvas -->
