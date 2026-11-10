@@ -257,8 +257,8 @@ body::before {
 
 .genres-slider-arrow:hover:not(:disabled) {
   background: rgba(255, 255, 255, 0.18);
-  border-color: rgba(255, 255, 255, 0.25);
-  color: #fff;
+  border-color: var(--spotify-green);
+  color: var(--spotify-green);
   transform: scale(1.1);
 }
 
@@ -296,8 +296,8 @@ body::before {
   left: 0;
   min-width: 40px;
   border-radius: 999px;
-  background: linear-gradient(90deg, #6366f1, #a855f7);
-  box-shadow: 0 0 10px rgba(168, 85, 247, 0.5), inset 0 1px 1px rgba(255, 255, 255, 0.4);
+  background: linear-gradient(90deg, #1db954, var(--spotify-green));
+  box-shadow: 0 0 10px var(--spotify-green-glow), inset 0 1px 1px rgba(255, 255, 255, 0.45);
   cursor: grab;
   touch-action: none;
   display: flex;
@@ -308,13 +308,13 @@ body::before {
 }
 
 .genres-slider-track:hover .genres-slider-thumb {
-  box-shadow: 0 0 14px rgba(168, 85, 247, 0.7), inset 0 1px 1px rgba(255, 255, 255, 0.6);
+  box-shadow: 0 0 14px rgba(30, 215, 96, 0.6), inset 0 1px 1px rgba(255, 255, 255, 0.6);
 }
 
 .genres-slider-thumb:hover,
 .genres-slider-thumb.dragging {
-  background: linear-gradient(90deg, #818cf8, #c084fc);
-  box-shadow: 0 0 16px rgba(192, 132, 252, 0.8), inset 0 1px 1px rgba(255, 255, 255, 0.8);
+  background: linear-gradient(90deg, var(--spotify-green), #22e66b);
+  box-shadow: 0 0 16px rgba(30, 215, 96, 0.75), inset 0 1px 1px rgba(255, 255, 255, 0.8);
 }
 
 .genres-slider-thumb.dragging {
