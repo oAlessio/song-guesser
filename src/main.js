@@ -3,7 +3,8 @@ import {
   PLAYLIST_CATEGORIES, 
   fetchPlaylistTracks, 
   searchTracksWithRelevance,
-  refreshTrackPreview
+  refreshTrackPreview,
+  fetchTracksFromPlaylist
 } from './songsData.js';
 import { player, SNIPPET_DURATIONS } from './audioPlayer.js';
 import { game } from './gameState.js';
@@ -80,6 +81,25 @@ const btnCloseCustomArtist = document.getElementById('btnCloseCustomArtist');
 const customArtistInput = document.getElementById('customArtistInput');
 const btnStartCustomGame = document.getElementById('btnStartCustomGame');
 
+// Custom Playlist Modal DOM
+const btnChangePlaylist = document.getElementById('btnChangePlaylist');
+const customPlaylistModal = document.getElementById('customPlaylistModal');
+const btnCloseCustomPlaylist = document.getElementById('btnCloseCustomPlaylist');
+const customPlaylistInput = document.getElementById('customPlaylistInput');
+const btnClearPlaylistInput = document.getElementById('btnClearPlaylistInput');
+const customPlaylistTextarea = document.getElementById('customPlaylistTextarea');
+const tabPlaylistLink = document.getElementById('tabPlaylistLink');
+const tabPlaylistText = document.getElementById('tabPlaylistText');
+const tabContentUrl = document.getElementById('tabContentUrl');
+const tabContentText = document.getElementById('tabContentText');
+const playlistStatusBox = document.getElementById('playlistStatusBox');
+const playlistSpinner = document.getElementById('playlistSpinner');
+const playlistStatusMsg = document.getElementById('playlistStatusMsg');
+const playlistProgressTrack = document.getElementById('playlistProgressTrack');
+const playlistProgressBar = document.getElementById('playlistProgressBar');
+const btnLoadPlaylistGame = document.getElementById('btnLoadPlaylistGame');
+const btnLoadPlaylistLabel = document.getElementById('btnLoadPlaylistLabel');
+
 const resultModal = document.getElementById('resultModal');
 const resultBadge = document.getElementById('resultBadge');
 const resultTitle = document.getElementById('resultTitle');
@@ -97,6 +117,7 @@ const btnRevealSong = document.getElementById('btnRevealSong');
 let selectedSuggestion = null;
 let searchDebounceTimer = null;
 let activeDropdownIndex = -1;
+let activePlaylistTab = 'link';
 
 /* ==========================================================================
    Initialization
@@ -145,12 +166,26 @@ function renderCategoryPills() {
     customArtistInput.focus();
   });
   categoryPillsContainer.appendChild(customPill);
+
+  // Custom Playlist Link pill (MODO PLAYLIST POR LINK)
+  const playlistPill = document.createElement('button');
+  playlistPill.className = `cat-pill custom-playlist-btn ${game.category === 'custom-playlist' ? 'active' : ''}`;
+  playlistPill.dataset.catId = 'custom-playlist';
+  playlistPill.innerHTML = `<span class="pill-icon">🔗</span> <span class="pill-label">Minha Playlist</span>`;
+  playlistPill.title = 'Jogar com link de playlist do Spotify ou Deezer';
+  playlistPill.addEventListener('click', () => {
+    playlistPill.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+    openCustomPlaylistModal();
+  });
+  categoryPillsContainer.appendChild(playlistPill);
 }
 
 /**
  * Load tracks for category and start round
  */
 async function loadCategory(catId, customArtist = null) {
+  if (btnChangePlaylist) btnChangePlaylist.classList.add('hidden');
+
   const catObj = PLAYLIST_CATEGORIES.find(c => c.id === catId);
   currentCategoryTitle.textContent = customArtist 
     ? `Artista: ${customArtist}` 
@@ -169,6 +204,114 @@ async function loadCategory(catId, customArtist = null) {
   } catch (err) {
     console.error('Failed to load playlist:', err);
     roundCounterText.textContent = 'Erro ao carregar.';
+  }
+}
+
+/* ==========================================================================
+   Custom Playlist Modal & Flow
+   ========================================================================== */
+
+function switchPlaylistTab(tab) {
+  activePlaylistTab = tab;
+  if (tab === 'link') {
+    tabPlaylistLink.classList.add('active');
+    tabPlaylistText.classList.remove('active');
+    tabContentUrl.classList.remove('hidden');
+    tabContentText.classList.add('hidden');
+    customPlaylistInput.focus();
+  } else {
+    tabPlaylistText.classList.add('active');
+    tabPlaylistLink.classList.remove('active');
+    tabContentText.classList.remove('hidden');
+    tabContentUrl.classList.add('hidden');
+    customPlaylistTextarea.focus();
+  }
+}
+
+function openCustomPlaylistModal() {
+  playlistStatusBox.classList.add('hidden');
+  playlistStatusBox.className = 'playlist-status-card hidden';
+  playlistProgressTrack.classList.add('hidden');
+  btnLoadPlaylistGame.disabled = false;
+  btnLoadPlaylistLabel.textContent = 'Carregar Playlist e Jogar';
+
+  openModal(customPlaylistModal);
+  if (activePlaylistTab === 'link') {
+    customPlaylistInput.focus();
+  } else {
+    customPlaylistTextarea.focus();
+  }
+}
+
+function showPlaylistStatus(msg, type = 'loading') {
+  playlistStatusBox.classList.remove('hidden');
+  playlistStatusBox.className = `playlist-status-card ${type}`;
+  playlistStatusMsg.textContent = msg;
+
+  if (type === 'loading') {
+    playlistSpinner.classList.remove('hidden');
+  } else {
+    playlistSpinner.classList.add('hidden');
+  }
+}
+
+async function handleLoadCustomPlaylist() {
+  const input = activePlaylistTab === 'link' 
+    ? customPlaylistInput.value.trim() 
+    : customPlaylistTextarea.value.trim();
+
+  if (!input) {
+    showPlaylistStatus('Por favor, informe o link ou as músicas da playlist.', 'error');
+    if (activePlaylistTab === 'link') customPlaylistInput.focus();
+    else customPlaylistTextarea.focus();
+    return;
+  }
+
+  btnLoadPlaylistGame.disabled = true;
+  btnLoadPlaylistLabel.textContent = 'Carregando músicas...';
+  showPlaylistStatus('Iniciando conexão e leitura da playlist...', 'loading');
+  playlistProgressTrack.classList.remove('hidden');
+  playlistProgressBar.style.width = '10%';
+
+  try {
+    const result = await fetchTracksFromPlaylist(input, (prog) => {
+      if (prog.message) {
+        playlistStatusMsg.textContent = prog.message;
+      }
+      if (prog.total && prog.total > 0) {
+        const pct = Math.min(95, Math.round((prog.processed / prog.total) * 100));
+        playlistProgressBar.style.width = `${Math.max(15, pct)}%`;
+      }
+    });
+
+    playlistProgressBar.style.width = '100%';
+    showPlaylistStatus(`Pronto! ${result.count} músicas carregadas da playlist.`, 'success');
+
+    setTimeout(() => {
+      closeModal(customPlaylistModal);
+      btnLoadPlaylistGame.disabled = false;
+      btnLoadPlaylistLabel.textContent = 'Carregar Playlist e Jogar';
+
+      // Update pills in genres bar
+      document.querySelectorAll('.cat-pill').forEach(p => p.classList.remove('active'));
+      const customPill = document.querySelector('.cat-pill.custom-playlist-btn');
+      if (customPill) customPill.classList.add('active');
+
+      // Update category title and display "Alterar playlist" button
+      currentCategoryTitle.textContent = `Playlist: ${result.title}`;
+      if (btnChangePlaylist) btnChangePlaylist.classList.remove('hidden');
+
+      // Initialize game playlist strictly with songs from that playlist!
+      game.initPlaylist(result.tracks, 'custom-playlist');
+      updateRoundCounter();
+    }, 600);
+
+  } catch (err) {
+    console.error('Error loading custom playlist:', err);
+    btnLoadPlaylistGame.disabled = false;
+    btnLoadPlaylistLabel.textContent = 'Tentar Novamente';
+    playlistProgressTrack.classList.add('hidden');
+    showPlaylistStatus(err.message || 'Falha ao carregar playlist. Certifique-se de que a playlist é pública e tente novamente.', 'error');
   }
 }
 
@@ -510,6 +653,7 @@ function renderSuggestions(list) {
         <span class="suggestion-title">${item.title}</span>
         <span class="suggestion-artist">${item.artist}</span>
       </div>
+      ${item.isCustomPlaylistTrack ? '<span class="playlist-suggestion-tag">Playlist</span>' : ''}
     `;
 
     div.addEventListener('click', () => {
@@ -856,8 +1000,52 @@ function setupEventListeners() {
     });
   });
 
+  // Custom Playlist Modal & Actions
+  btnCloseCustomPlaylist.addEventListener('click', () => closeModal(customPlaylistModal));
+  if (btnChangePlaylist) {
+    btnChangePlaylist.addEventListener('click', () => openCustomPlaylistModal());
+  }
+
+  tabPlaylistLink.addEventListener('click', () => switchPlaylistTab('link'));
+  tabPlaylistText.addEventListener('click', () => switchPlaylistTab('text'));
+
+  btnClearPlaylistInput.addEventListener('click', () => {
+    customPlaylistInput.value = '';
+    btnClearPlaylistInput.classList.add('hidden');
+    customPlaylistInput.focus();
+  });
+
+  customPlaylistInput.addEventListener('input', () => {
+    if (customPlaylistInput.value.trim().length > 0) {
+      btnClearPlaylistInput.classList.remove('hidden');
+    } else {
+      btnClearPlaylistInput.classList.add('hidden');
+    }
+  });
+
+  customPlaylistInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      handleLoadCustomPlaylist();
+    }
+  });
+
+  document.querySelectorAll('.sample-playlist-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const url = btn.dataset.url;
+      customPlaylistInput.value = url;
+      btnClearPlaylistInput.classList.remove('hidden');
+      switchPlaylistTab('link');
+      handleLoadCustomPlaylist();
+    });
+  });
+
+  btnLoadPlaylistGame.addEventListener('click', () => {
+    handleLoadCustomPlaylist();
+  });
+
   // Close modals on clicking outside backdrop
-  [statsModal, helpModal, customArtistModal, historyModal, resultModal].forEach(modal => {
+  [statsModal, helpModal, customArtistModal, customPlaylistModal, historyModal, resultModal].forEach(modal => {
     modal.addEventListener('click', (e) => {
       if (e.target === modal) closeModal(modal);
     });
@@ -865,7 +1053,13 @@ function setupEventListeners() {
 
   // Spacebar shortcut to play/pause
   document.addEventListener('keydown', (e) => {
-    if (e.code === 'Space' && document.activeElement !== songSearchInput && document.activeElement !== customArtistInput) {
+    if (
+      e.code === 'Space' && 
+      document.activeElement !== songSearchInput && 
+      document.activeElement !== customArtistInput &&
+      document.activeElement !== customPlaylistInput &&
+      document.activeElement !== customPlaylistTextarea
+    ) {
       e.preventDefault();
       player.togglePlay();
     }

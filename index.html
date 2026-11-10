@@ -80,6 +80,13 @@
           <div class="banner-badge">
             <span class="badge-dot"></span>
             <span id="currentCategoryTitle">Top Hits Globais</span>
+            <button id="btnChangePlaylist" class="change-playlist-btn hidden" title="Trocar ou configurar link da playlist">
+              <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/>
+                <path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/>
+              </svg>
+              <span>Alterar playlist</span>
+            </button>
           </div>
           <div class="round-counter">
             <span id="roundCounterText">Música 1 de 10</span>
@@ -405,6 +412,132 @@
           <div class="modal-action-row">
             <button id="btnStartCustomGame" class="spotify-pill-btn primary btn-large">
               Iniciar Jogo com Este Artista
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Custom Playlist Modal (Modo Playlist por Link) -->
+      <div id="customPlaylistModal" class="modal-backdrop hidden">
+        <div class="modal-card custom-playlist-card">
+          <div class="modal-close-bar">
+            <div>
+              <div class="modal-mode-badge">
+                <span class="badge-dot-green"></span>
+                <span>MODO EXCLUSIVO</span>
+              </div>
+              <h3 class="modal-title">Jogar com Link de Playlist</h3>
+            </div>
+            <button id="btnCloseCustomPlaylist" class="icon-btn close-modal-btn" title="Fechar modal" aria-label="Fechar">✕</button>
+          </div>
+
+          <!-- AVISO DE PERMISSÃO OBRIGATÓRIA (REQUISITO FUNDAMENTAL) -->
+          <div class="playlist-permission-notice" id="playlistPermissionNotice">
+            <div class="notice-top">
+              <span class="notice-icon">⚠️</span>
+              <div class="notice-headline">
+                <strong>Aviso de Permissão Obrigatória</strong>
+                <span>A playlist deve estar configurada como <strong>Pública</strong></span>
+              </div>
+            </div>
+            <p class="notice-desc">
+              Para o jogo conseguir ler e reproduzir as músicas, a sua playlist <strong>DEVE ser Pública</strong> no Spotify ou Deezer.
+              Playlists <strong>Privadas</strong> ou <strong>Secretas</strong> são protegidas pelos serviços de streaming e bloqueiam o acesso sem login.
+            </p>
+            <div class="notice-instructions">
+              <span class="instructions-title">Como verificar / tornar pública no Spotify:</span>
+              <ol class="instructions-steps">
+                <li>Abra sua playlist no aplicativo ou site do <strong>Spotify</strong>.</li>
+                <li>Clique no botão de três pontinhos <strong>(•••)</strong> ao lado do título.</li>
+                <li>Selecione <strong>"Tornar pública"</strong> (ou "Adicionar ao perfil").</li>
+              </ol>
+            </div>
+          </div>
+
+          <!-- Mode Tabs: Link vs Lista Manual -->
+          <div class="playlist-mode-tabs">
+            <button id="tabPlaylistLink" class="playlist-tab-btn active" type="button">
+              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/>
+                <path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/>
+              </svg>
+              <span>Link da Playlist</span>
+            </button>
+            <button id="tabPlaylistText" class="playlist-tab-btn" type="button">
+              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="8" y1="6" x2="21" y2="6"/>
+                <line x1="8" y1="12" x2="21" y2="12"/>
+                <line x1="8" y1="18" x2="21" y2="18"/>
+                <line x1="3" y1="6" x2="3.01" y2="6"/>
+                <line x1="3" y1="12" x2="3.01" y2="12"/>
+                <line x1="3" y1="18" x2="3.01" y2="18"/>
+              </svg>
+              <span>Colar Lista em Texto</span>
+            </button>
+          </div>
+
+          <!-- Tab Pane 1: URL Input -->
+          <div id="tabContentUrl" class="playlist-tab-pane">
+            <p class="custom-modal-desc">
+              Cole o link da sua playlist pública do <strong>Spotify</strong> ou <strong>Deezer</strong>. O jogo só tocará músicas que estão nessa playlist:
+            </p>
+            
+            <div class="custom-playlist-input-wrap">
+              <div class="playlist-input-container">
+                <svg class="playlist-input-icon" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/>
+                  <path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/>
+                </svg>
+                <input 
+                  type="url" 
+                  id="customPlaylistInput" 
+                  class="spotify-search-input" 
+                  placeholder="Ex: https://open.spotify.com/playlist/... ou Deezer"
+                  autocomplete="off"
+                  spellcheck="false"
+                />
+                <button id="btnClearPlaylistInput" class="btn-clear hidden" type="button" title="Limpar link">✕</button>
+              </div>
+            </div>
+
+            <!-- Sugestões de teste rápido com playlists públicas -->
+            <div class="popular-artists-tags">
+              <span class="tag-title">Ou teste com uma playlist pública de exemplo:</span>
+              <div class="tags-row">
+                <button type="button" class="sample-playlist-btn" data-url="https://open.spotify.com/playlist/37i9dQZF1DXcBWIGoYBM5M">🔥 Today's Top Hits</button>
+                <button type="button" class="sample-playlist-btn" data-url="https://open.spotify.com/playlist/37i9dQZF1DWXRqgorJj26U">🎸 Rock Classics</button>
+                <button type="button" class="sample-playlist-btn" data-url="https://www.deezer.com/playlist/3155776842">🇧🇷 Hits Brasil</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Tab Pane 2: Plaintext List -->
+          <div id="tabContentText" class="playlist-tab-pane hidden">
+            <p class="custom-modal-desc">
+              Digite ou cole o nome das músicas (uma por linha, no formato <em>Artista - Música</em> ou apenas o nome):
+            </p>
+            <textarea 
+              id="customPlaylistTextarea" 
+              class="playlist-textarea" 
+              placeholder="Exemplo:&#10;Coldplay - Yellow&#10;Queen - Bohemian Rhapsody&#10;The Weeknd - Blinding Lights&#10;Legião Urbana - Tempo Perdido&#10;Billie Eilish - Bad Guy"
+              rows="6"
+            ></textarea>
+          </div>
+
+          <!-- Dynamic Status Card (Loading, Progress, Error) -->
+          <div id="playlistStatusBox" class="playlist-status-card hidden">
+            <div class="status-spinner-circle" id="playlistSpinner"></div>
+            <div class="status-details">
+              <span class="status-msg" id="playlistStatusMsg">Carregando playlist...</span>
+              <div class="status-progress-track hidden" id="playlistProgressTrack">
+                <div class="status-progress-bar" id="playlistProgressBar"></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="modal-action-row">
+            <button id="btnLoadPlaylistGame" class="spotify-pill-btn primary btn-large" type="button">
+              <span id="btnLoadPlaylistLabel">Carregar Playlist e Jogar</span>
             </button>
           </div>
         </div>
